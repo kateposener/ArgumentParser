@@ -194,5 +194,12 @@ namespace ArgumentParser.Tests
             var arg = new Args("a#", _emptyArgs);
             Assert.False(arg.IsIntArg('b'));
         }
+
+        [Test]
+        public void Should_return_empty_string_from_new_argument_marshaller()
+        {
+            var stringArgumentMarshaller = new StringArgumentMarshaller();
+            Assert.That(stringArgumentMarshaller.StringValue, Is.EqualTo(string.Empty));
+        }
 	}
 }

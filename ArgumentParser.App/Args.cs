@@ -10,8 +10,9 @@ namespace ArgumentParser.App
 		private readonly string[] _args;
 		private bool _valid = true;
 		private readonly List<char> _unexpectedArguments = new List<char>();
-		private readonly Dictionary<char, bool> _booleanArgs = new Dictionary<char, bool>();
-		private readonly Dictionary<char, string> _stringArgs = new Dictionary<char, string>();
+        private readonly Dictionary<char, BooleanArgumentMarshaller> _booleanArgs = new Dictionary<char, BooleanArgumentMarshaller>();
+        //private readonly Dictionary<char, string> _stringArgs = new Dictionary<char, string>();
+		private readonly Dictionary<char, StringArgumentMarshaller> _stringArgs = new Dictionary<char, StringArgumentMarshaller>();
 		private readonly Dictionary<char, int> _intArgs = new Dictionary<char, int>();
 		private readonly List<char> _argsFound = new List<char>();
 		private int _currentArgument;
@@ -41,9 +42,9 @@ namespace ArgumentParser.App
 			return _valid;
 		}
 
-		private bool ParseSchema()
+		private void ParseSchema()
 		{
-			foreach (var element in _schema.Split(','))
+		    foreach (var element in _schema.Split(','))
 			{
 				if (element.Length > 0)
 				{
@@ -51,10 +52,9 @@ namespace ArgumentParser.App
 					ParseSchemaElement(trimmedElement);
 				}
 			}
-			return true;
 		}
 
-		private void ParseSchemaElement(string element)
+	    private void ParseSchemaElement(string element)
 		{
 			var elementId = element[0];
 			var elementTail = element.Substring(1);
@@ -77,7 +77,7 @@ namespace ArgumentParser.App
 
 		private void ParseBooleanSchemaElement(char elementId)
 		{
-			_booleanArgs.Add(elementId, false);
+			_booleanArgs.Add(elementId, new BooleanArgumentMarshaller());
 		}
 
 		private void ParseIntegerSchemaElement(char elementId)
@@ -87,7 +87,7 @@ namespace ArgumentParser.App
 
 		private void ParseStringSchemaElement(char elementId)
 		{
-			_stringArgs.Add(elementId, string.Empty);
+			_stringArgs.Add(elementId, new StringArgumentMarshaller());
 		}
 
 		private bool IsStringSchemaElement(string elementTail)
@@ -105,17 +105,16 @@ namespace ArgumentParser.App
 			return elementTail.Equals("#");
 		}
 
-		private bool ParseArguments()
+		private void ParseArguments()
 		{
-			for (_currentArgument = 0; _currentArgument < _args.Length; _currentArgument++)
+		    for (_currentArgument = 0; _currentArgument < _args.Length; _currentArgument++)
 			{
 				var arg = _args[_currentArgument];
 				ParseArguments(arg);
 			}
-			return true;
 		}
 
-		private void ParseArguments(string arg)
+	    private void ParseArguments(string arg)
 		{
 			if (arg.StartsWith("-"))
 				ParseElements(arg);
@@ -191,9 +190,13 @@ namespace ArgumentParser.App
 			try
 			{
 				if (_stringArgs.ContainsKey(argChar))
-					_stringArgs[argChar] = _args[_currentArgument];
+					_stringArgs[argChar].StringValue = _args[_currentArgument];
 				else
-					_stringArgs.Add(argChar, _args[_currentArgument]);
+
+				{
+				    var stringArgumentMarshaller = new StringArgumentMarshaller {StringValue = _args[_currentArgument]};
+				    _stringArgs.Add(argChar, stringArgumentMarshaller);
+				}
 			}
 			catch (IndexOutOfRangeException)
 			{
@@ -212,14 +215,17 @@ namespace ArgumentParser.App
 		private void SetBooleanArg(char argChar, bool value)
 		{
 			if (_booleanArgs.ContainsKey(argChar))
-				_booleanArgs[argChar] = value;
-			else
-				_booleanArgs.Add(argChar, value);
+				_booleanArgs[argChar].BooleanValue = value;
+            else
+			{
+			    var booleanArgumentMarshaller = new BooleanArgumentMarshaller {BooleanValue = value};
+			    _booleanArgs.Add(argChar, booleanArgumentMarshaller);
+			}                
 		}
 
 		public bool IsBooleanArg(char argChar)
 		{
-			return _booleanArgs.ContainsKey(argChar);
+		    return _booleanArgs.ContainsKey(argChar);
 		}
 
 		public int Cardinality()
@@ -229,13 +235,12 @@ namespace ArgumentParser.App
 
 		public string Usage()
 		{
-			if (_schema.Length > 0)
+		    if (_schema.Length > 0)
 				return "-[" + _schema + "]";
-			else
-				return "";
+		    return "";
 		}
 
-		public string ErrorMessage()
+	    public string ErrorMessage()
 		{
 			switch (_errorCode)
 			{
@@ -268,7 +273,7 @@ namespace ArgumentParser.App
 	    {
 	        try
 	        {
-	            return _stringArgs[arg];
+	            return _stringArgs[arg].StringValue;
 	        }
 	        catch (Exception)
 	        {
@@ -285,9 +290,10 @@ namespace ArgumentParser.App
 
 		public bool GetBoolean(char arg)
 		{
-		    bool value;
-		    _booleanArgs.TryGetValue(arg, out value);
-            return value;
+		    BooleanArgumentMarshaller booleanArgumentMarshaller;
+		    if (_booleanArgs.TryGetValue(arg, out booleanArgumentMarshaller))
+		        return booleanArgumentMarshaller.BooleanValue;
+		    return false;
 		}
 
 	    public bool Has(char arg)
@@ -313,4 +319,19 @@ namespace ArgumentParser.App
 			UnexpectedArgument
 		}
 	}
+
+    public class BooleanArgumentMarshaller
+    {
+        public bool BooleanValue { get; set; }
+    }
+
+    public class StringArgumentMarshaller
+    {
+        public string StringValue { get; set; }
+
+        public StringArgumentMarshaller()
+        {
+            StringValue = "";
+        }
+    }
 }
