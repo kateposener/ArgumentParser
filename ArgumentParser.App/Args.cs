@@ -36,7 +36,7 @@ namespace ArgumentParser.App
 			{
 				ParseArguments();
 			}
-			catch (ArgsException)
+			catch (ArgumentException)
 			{
 			}
 			return _valid;
@@ -173,14 +173,14 @@ namespace ArgumentParser.App
 				_valid = false;
 				_errorArgumentId = argChar;
 				_errorCode = ErrorCode.MissingInteger;
-				throw new ArgsException();
+				throw new ArgumentException();
 			}
 			catch (FormatException)
 			{
 				_valid = false;
 				_errorArgumentId = argChar;
 				_errorCode = ErrorCode.InvalidInterger;
-				throw new ArgsException();
+				throw new ArgumentException();
 			}
 		}
 
@@ -203,7 +203,7 @@ namespace ArgumentParser.App
 				_valid = false;
 				_errorArgumentId = argChar;
 				_errorCode = ErrorCode.MissingString;
-				throw new ArgsException();
+				throw new ArgumentException();
 			}
 		}
 
@@ -304,10 +304,6 @@ namespace ArgumentParser.App
 		public bool IsValid()
 		{
 			return _valid;
-		}
-
-		internal class ArgsException : Exception
-		{
 		}
 
 		private enum ErrorCode

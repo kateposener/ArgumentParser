@@ -17,7 +17,7 @@ namespace ArgumentParser.App
 				Console.WriteLine("Port : {0}", port);
 				Console.WriteLine("Directory : {0}", directory);
 			}
-			catch (Args.ArgsException e)
+			catch (ArgumentException e)
 			{
 				Console.WriteLine("Argument error: {0}", e.Message);
 			}
