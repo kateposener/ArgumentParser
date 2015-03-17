@@ -11,9 +11,8 @@ namespace ArgumentParser.App
 		private bool _valid = true;
 		private readonly List<char> _unexpectedArguments = new List<char>();
         private readonly Dictionary<char, BooleanArgumentMarshaller> _booleanArgs = new Dictionary<char, BooleanArgumentMarshaller>();
-        //private readonly Dictionary<char, string> _stringArgs = new Dictionary<char, string>();
 		private readonly Dictionary<char, StringArgumentMarshaller> _stringArgs = new Dictionary<char, StringArgumentMarshaller>();
-		private readonly Dictionary<char, int> _intArgs = new Dictionary<char, int>();
+		private readonly Dictionary<char, IntArgumentMarshaller> _intArgs = new Dictionary<char, IntArgumentMarshaller>();
 		private readonly List<char> _argsFound = new List<char>();
 		private int _currentArgument;
 		private char _errorArgumentId = '\0';
@@ -82,7 +81,7 @@ namespace ArgumentParser.App
 
 		private void ParseIntegerSchemaElement(char elementId)
 		{
-			_intArgs.Add(elementId, 0);
+			_intArgs.Add(elementId, new IntArgumentMarshaller());
 		}
 
 		private void ParseStringSchemaElement(char elementId)
@@ -164,9 +163,12 @@ namespace ArgumentParser.App
 				var parameter = _args[_currentArgument];
 				var intArg = int.Parse(parameter);
 				if (_intArgs.ContainsKey(argChar))
-					_intArgs[argChar] = intArg;
+					_intArgs[argChar].IntValue = intArg;
 				else
-					_intArgs.Add(argChar, intArg);
+				{
+				    var intArgumentMarshaller = new IntArgumentMarshaller {IntValue = intArg};
+				    _intArgs.Add(argChar, intArgumentMarshaller);
+				}
 			}
 			catch (IndexOutOfRangeException)
 			{
@@ -283,9 +285,10 @@ namespace ArgumentParser.App
 
 	    public int GetInt(char arg)
 	    {
-	        int value;
-	        _intArgs.TryGetValue(arg, out value);
-	        return value;
+	        IntArgumentMarshaller intArgumentMarshaller;
+	        if (_intArgs.TryGetValue(arg, out intArgumentMarshaller))
+	            return intArgumentMarshaller.IntValue;
+	        return 0;
 	    }
 
 		public bool GetBoolean(char arg)
@@ -329,5 +332,10 @@ namespace ArgumentParser.App
         {
             StringValue = "";
         }
+    }
+
+    public class IntArgumentMarshaller
+    {
+        public int IntValue { get; set; }
     }
 }
