@@ -152,8 +152,8 @@ namespace ArgumentParser.Tests
         [Test]
         public void Should_return_empty_string_from_new_argument_marshaller()
         {
-            var stringArgumentMarshaller = new StringArgumentMarshaller();
-            Assert.That(stringArgumentMarshaller.StringValue, Is.EqualTo(string.Empty));
+            var stringArgumentMarshaller = new ArgumentMarshaller<string>{Value = string.Empty};
+            Assert.That(stringArgumentMarshaller.Value, Is.EqualTo(string.Empty));
         }
 	}
 }
